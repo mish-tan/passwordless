@@ -169,6 +169,23 @@ module Passwordless
       assert_equal "/users/#{passwordless_session.authenticatable.id}", path
     end
 
+    test("PATCH /:passwordless_for/sign_in/:id -> SUCCESS / safe destination_path") do
+      passwordless_session = create_pwless_session(token: "hi")
+      destination_path = "/staging"
+
+      patch(
+        "/users/sign_in/#{passwordless_session.identifier}",
+        params: {
+          passwordless: {token: "hi"},
+          destination_path: destination_path
+        }
+      )
+
+      assert_equal 303, status
+      assert_equal "#{request.base_url}#{destination_path}", response.location
+      assert_equal pwless_session(User), Session.last!.id
+    end
+
     test("PATCH /:passwordless_for/sign_in/:id -> SUCCESS / unsafe destination_path falls back") do
       passwordless_session = create_pwless_session(token: "hi")
 
