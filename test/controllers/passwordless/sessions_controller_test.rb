@@ -169,6 +169,26 @@ module Passwordless
       assert_equal "/users/#{passwordless_session.authenticatable.id}", path
     end
 
+    test("PATCH /:passwordless_for/sign_in/:id -> SUCCESS / unsafe destination_path falls back") do
+      passwordless_session = create_pwless_session(token: "hi")
+
+      patch(
+        "/users/sign_in/#{passwordless_session.identifier}",
+        params: {
+          passwordless: {token: "hi"},
+          destination_path: "-staging.com"
+        }
+      )
+
+      assert_equal 303, status
+
+      follow_redirect!
+      assert_equal 200, status
+      assert_equal "/", path
+
+      assert_equal pwless_session(User), Session.last!.id
+    end
+
     test("PATCH /:passwordless_for/sign_in/:id -> ERROR") do
       passwordless_session = create_pwless_session(token: "hi")
 
@@ -224,16 +244,16 @@ module Passwordless
     test("PATCH /:passwordless_for/sign_in/:id -> after_session_confirm with request object") do
       user = create_user(email: "test@example.com")
       passwordless_session = create_pwless_session(authenticatable: user, token: "valid_token")
-      
+
       confirm_called = false
-      
-      with_config(after_session_confirm: ->(session, request) { 
+
+      with_config(after_session_confirm: ->(session, request) {
         confirm_called = true
         assert_equal user, session.authenticatable
         assert_kind_of ActionDispatch::Request, request
       }) do
         patch(
-          "/users/sign_in/#{passwordless_session.identifier}", 
+          "/users/sign_in/#{passwordless_session.identifier}",
           params: {passwordless: {token: "valid_token"}}
         )
       end
@@ -245,12 +265,12 @@ module Passwordless
     test("PATCH /:passwordless_for/sign_in/:id -> after_session_confirm not called on invalid token") do
       user = create_user(email: "test@example.com")
       passwordless_session = create_pwless_session(authenticatable: user, token: "valid_token")
-      
+
       confirm_called = false
-      
+
       with_config(after_session_confirm: ->(_) { confirm_called = true }) do
         patch(
-          "/users/sign_in/#{passwordless_session.identifier}", 
+          "/users/sign_in/#{passwordless_session.identifier}",
           params: {passwordless: {token: "invalid_token"}}
         )
       end
