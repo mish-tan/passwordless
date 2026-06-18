@@ -345,7 +345,7 @@ Rails natively supports external redirect allowlisting. You can specify your tru
 config.action_controller.allowed_redirect_hosts = ["staging.yoursite.com", "app.yoursite.com"]
 
 **For Rails 8.0 and older**
-You will need to manually override the redirect behavior to bypass the default security checks. You can do this by overriding the `passwordless_query_redirect_path` helper in your `ApplicationController` and implementing your own strict domain allowlist before returning a full URL.
+You will need to manually override the redirect behavior to bypass the default security checks. You can do this by overriding the `passwordless_query_redirect_path` helper in the `session_controller.rb`
 
 ### Looking up the user
 
